@@ -42,7 +42,7 @@ import { uploadImageAction } from "@/lib/actions/upload-actions";
 import { compressImage } from "@/lib/compress-image";
 import type { BlogSection } from "@/lib/dal/blogs";
 
-const sectionSchema = z.object({
+const _sectionSchema = z.object({
   id: z.string(),
   blog_id: z.string(),
   type: z.enum(["title", "image", "code", "paragraph"]),
@@ -183,9 +183,9 @@ export default function SectionEditor({
           //   field.handleChange(newSections);
           //   mutation.mutate(newSections);
           // };
-            const removeSection = (index: number) => {
-              field.removeValue(index);
-            };
+          const removeSection = (index: number) => {
+            field.removeValue(index);
+          };
 
           return (
             <div className="flex flex-col gap-8">

@@ -26,8 +26,8 @@ export async function createBlogAction(blogId: string) {
   );
 }
 
-export async function createNewDraftAction(formData?: FormData) {
-  const { randomUUID } = await import("crypto");
+export async function createNewDraftAction(_formData?: FormData) {
+  const { randomUUID } = await import("node:crypto");
   await createBlogAction(randomUUID());
 }
 

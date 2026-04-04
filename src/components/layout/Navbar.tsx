@@ -19,7 +19,7 @@ export default function Navbar() {
         <div className="flex items-center gap-4">
           <Show when="signed-in">
             <OwnerLinks />
-            
+
             <UserButton
               appearance={{
                 elements: {

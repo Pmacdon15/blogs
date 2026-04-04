@@ -19,12 +19,19 @@ export async function getBlogByIdDb(id: string): Promise<Blog | null> {
   return res[0] as unknown as Blog;
 }
 
-export async function createBlogDb(id: string, authorId: string): Promise<boolean> {
+export async function createBlogDb(
+  id: string,
+  authorId: string,
+): Promise<boolean> {
   await sql`INSERT INTO blogs (id, author_id, title) VALUES (${id}, ${authorId}, 'Untitled Draft');`;
   return true;
 }
 
-export async function updateBlogDb(id: string, title: string, coverImageUrl: string | null): Promise<boolean> {
+export async function updateBlogDb(
+  id: string,
+  title: string,
+  coverImageUrl: string | null,
+): Promise<boolean> {
   await sql`UPDATE blogs SET title = ${title}, cover_image_url = ${coverImageUrl}, updated_at = CURRENT_TIMESTAMP WHERE id = ${id};`;
   return true;
 }

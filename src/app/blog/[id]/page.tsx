@@ -46,7 +46,7 @@ export default function BlogViewPage(props: PageProps<"/blog/[id]">) {
           >
             Research & Conception
           </Badge> */}
-         
+
           <Suspense
             fallback={
               <h1 className="text-4xl md:text-6xl font-black tracking-tight leading-[1.1] text-white">
@@ -54,7 +54,7 @@ export default function BlogViewPage(props: PageProps<"/blog/[id]">) {
               </h1>
             }
           >
-             <LinkToEditButton blogIdPromise={blogIdPromise} />
+            <LinkToEditButton blogIdPromise={blogIdPromise} />
             <Header blogTitlePromise={blogTitlePromise} />
           </Suspense>
 
