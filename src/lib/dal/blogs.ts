@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { errAsync, okAsync } from "neverthrow";
 import {
   createBlogDb,
+  deleteBlogDb,
   deleteBlogSectionDb,
   getBlogByIdDb,
   getBlogSectionsDb,
@@ -210,6 +211,25 @@ export async function deleteBlogSection(sectionId: string) {
 
   try {
     const result = await deleteBlogSectionDb(sectionId);
+    return okAsync(result);
+  } catch (e) {
+    console.error("Unknown Db error: ", e);
+    return errAsync({
+      reason: "Unknown Db error.",
+    } as const);
+  }
+}
+
+export async function deleteBlog(blogId: string) {
+  const { userId } = await auth();
+  if (!userId) {
+    return errAsync({
+      reason: "Unauthorized: You must be logged in to delete.",
+    } as const);
+  }
+
+  try {
+    const result = await deleteBlogDb(blogId);
     return okAsync(result);
   } catch (e) {
     console.error("Unknown Db error: ", e);

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import {
   createBlog,
+  deleteBlog,
   deleteBlogSection,
   publishBlog,
   updateBlog,
@@ -108,6 +109,21 @@ export async function deleteSectionAction(blogId: string, sectionId: string) {
         success: false,
         error: error.reason,
       };
+    },
+  );
+}
+
+export async function deleteBlogAction(blogId: string) {
+  const result = await deleteBlog(blogId);
+
+  return result.match(
+    () => {
+      revalidatePath(`/drafts`);
+      revalidatePath(`/`);
+      return { success: true };
+    },
+    (error) => {
+      return { success: false, error: error.reason };
     },
   );
 }

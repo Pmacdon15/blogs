@@ -68,3 +68,8 @@ export async function deleteBlogSectionDb(sectionId: string): Promise<boolean> {
   await sql`DELETE FROM blog_sections WHERE id = ${sectionId};`;
   return true;
 }
+
+export async function deleteBlogDb(id: string): Promise<boolean> {
+  await sql`DELETE FROM blogs WHERE id = ${id};`;
+  return true;
+}

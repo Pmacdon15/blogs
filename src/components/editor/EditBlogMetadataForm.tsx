@@ -4,9 +4,20 @@ import { use, useTransition } from "react";
 import { Blog } from "@/lib/dal/blogs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { updateBlogAction, publishBlogAction } from "@/lib/actions/blog-actions";
+import { updateBlogAction, publishBlogAction, deleteBlogAction } from "@/lib/actions/blog-actions";
 import { toast } from "sonner";
-import { Globe, Save, Loader2 } from "lucide-react";
+import { Globe, Save, Loader2, Trash } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export function EditBlogMetadataForm({
   blogId,
@@ -17,6 +28,7 @@ export function EditBlogMetadataForm({
 }) {
   const blog = use(promise);
   const [isPublishing, startPublish] = useTransition();
+  const [isDeleting, startDelete] = useTransition();
 
   if (!blog) {
     return (
@@ -45,6 +57,40 @@ export function EditBlogMetadataForm({
           </h1>
         </div>
         <div className="flex items-center gap-3 w-full md:w-auto">
+          <AlertDialog>
+            <AlertDialogTrigger render={<Button type="button" variant="destructive" className="w-full md:w-auto" disabled={isDeleting} />}>
+              {isDeleting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Trash className="w-4 h-4 mr-2" />}
+              Delete
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. This will permanently delete this sequence and remove your data from our servers.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={(e) => {
+                    e.preventDefault();
+                    startDelete(async () => {
+                      const res = await deleteBlogAction(blogId);
+                      if (res && res.success === false) {
+                        toast.error(("error" in res ? res.error : null) || "Failed to delete");
+                      } else {
+                        toast.success("Blog successfully deleted");
+                        window.location.href = '/drafts';
+                      }
+                    });
+                  }}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  {isDeleting ? "Deleting..." : "Continue"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
           <Button
             type="button"
             variant={blog.published ? "secondary" : "default"}
