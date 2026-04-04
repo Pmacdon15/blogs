@@ -1,15 +1,15 @@
 import { auth } from "@clerk/nextjs/server";
 import { errAsync, okAsync } from "neverthrow";
 import {
+  createBlogDb,
   deleteBlogSectionDb,
   getBlogByIdDb,
   getBlogSectionsDb,
   getBlogsDb,
-  updateBlogSectionsDb,
-  createBlogDb,
-  updateBlogDb,
-  publishBlogDb,
   getDraftsDb,
+  publishBlogDb,
+  updateBlogDb,
+  updateBlogSectionsDb,
 } from "../db/blog-queries";
 
 export type Blog = {
@@ -95,7 +95,7 @@ export async function getDrafts(): Promise<FetchResult<Blog[]>> {
   }
 }
 
-export async function getBlogsById(id: string): Promise<FetchResult<Blog>> {
+export async function getBlogById(id: string): Promise<FetchResult<Blog>> {
   try {
     const data = await getBlogByIdDb(id);
     if (!data) return { data: null, error: "Blog not found" };
@@ -120,7 +120,7 @@ export async function createBlog(blogId: string) {
   const { userId } = await auth();
   if (!userId) {
     return errAsync({
-       reason: "Unauthorized: You must be logged in to draft a blog."
+      reason: "Unauthorized: You must be logged in to draft a blog.",
     } as const);
   }
 
@@ -135,11 +135,15 @@ export async function createBlog(blogId: string) {
   }
 }
 
-export async function updateBlog(blogId: string, title: string, coverImageUrl: string | null) {
+export async function updateBlog(
+  blogId: string,
+  title: string,
+  coverImageUrl: string | null,
+) {
   const { userId } = await auth();
   if (!userId) {
     return errAsync({
-       reason: "Unauthorized: You must be logged in to modify metadata."
+      reason: "Unauthorized: You must be logged in to modify metadata.",
     } as const);
   }
 
@@ -158,7 +162,7 @@ export async function publishBlog(blogId: string) {
   const { userId } = await auth();
   if (!userId) {
     return errAsync({
-       reason: "Unauthorized: You must be logged in to publish."
+      reason: "Unauthorized: You must be logged in to publish.",
     } as const);
   }
 
@@ -199,7 +203,8 @@ export async function deleteBlogSection(sectionId: string) {
   const { userId } = await auth();
   if (!userId) {
     return errAsync({
-      reason: "Unauthorized: You must be logged in to delete structural blocks.",
+      reason:
+        "Unauthorized: You must be logged in to delete structural blocks.",
     } as const);
   }
 
