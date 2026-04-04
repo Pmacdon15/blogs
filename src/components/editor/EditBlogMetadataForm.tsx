@@ -79,7 +79,7 @@ export function EditBlogMetadataForm({
           const cover = fd.get("coverUrl") as string;
           const res = await updateBlogAction(blogId, title, cover || null);
           if (res.success) toast.success("Configuration preserved");
-          else toast.error(res.error || "Failed to save configuration");
+          else if ('error' in res) toast.error(res.error as string || "Failed to save configuration");
         }}
         className="flex flex-col gap-4"
       >
@@ -89,6 +89,7 @@ export function EditBlogMetadataForm({
               Master Title
             </label>
             <Input
+              key={blog.title}
               name="title"
               defaultValue={blog.title}
               className="bg-muted/40 border-border/50 text-white font-medium h-12"
@@ -99,6 +100,7 @@ export function EditBlogMetadataForm({
               Cover Topology URI
             </label>
             <Input
+              key={blog.cover_image_url || 'empty'}
               name="coverUrl"
               defaultValue={blog.cover_image_url || ""}
               placeholder="https://..."

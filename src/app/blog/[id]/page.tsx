@@ -1,9 +1,9 @@
 import { Suspense } from "react";
+import Author from "@/components/blog/author";
 import CoverImage from "@/components/blog/cover-image";
 import CreatedAt from "@/components/blog/created-at";
 import Header from "@/components/blog/header";
 import Sections from "@/components/blog/sections";
-
 import { Badge } from "@/components/ui/badge";
 import { getBlogSections, getBlogsById } from "@/lib/dal/blogs";
 
@@ -20,6 +20,10 @@ export default function BlogViewPage(props: PageProps<"/blog/[id]">) {
 
   const blogsCoverImageUrlPromise = blogsPromise.then((blog) =>
     blog.error === null ? blog.data?.cover_image_url : "",
+  );
+
+  const blogsAuthorPromise = blogsPromise.then((blog) =>
+    blog.error === null ? blog.data?.author_id : "",
   );
 
   const sectionsPromise = props.params.then((params) =>
@@ -52,7 +56,9 @@ export default function BlogViewPage(props: PageProps<"/blog/[id]">) {
           <div className="flex items-center gap-4 text-muted-foreground font-medium">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-primary to-blue-600" />
-              <span>Abstract Author</span>
+              <Suspense>
+                <Author authorNamePromise={blogsAuthorPromise} />
+              </Suspense>
             </div>
             <span>•</span>
             <Suspense>
