@@ -1,33 +1,31 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import {
+  clerkMiddleware,
+  createRouteMatcher,
+} from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
 
-// const isAdminRoute = createRouteMatcher([
-// 	'/billing(.*)',
-// 	'/settings(.*)',
-// 	'/lists/client(.*)',
-// 	'/email(.*)',
-// ])
-const isProtectedRoute = createRouteMatcher([
-  // '/',
-]);
+const isProtectedRoute = createRouteMatcher(["/edit(.*)"]);
+
 export default clerkMiddleware(async (auth, req) => {
   if (isProtectedRoute(req)) {
-    await auth.protect();
+    const { userId } = await auth.protect();
+    
+    // Get session claims to check email
+    const { sessionClaims } = await auth();
+    
+    const isOwner = sessionClaims?.email === process.env.BLOG_OWNERS_EMAIL;
+    
+    if (!isOwner) {
+      const url = req.nextUrl.clone();
+      url.pathname = "/";
+      return NextResponse.redirect(url);
+    }
   }
-  // if (isAdminRoute(req)) {
-  // 	const { sessionClaims, orgId } = await auth.protect()
-
-  // 	if (sessionClaims?.orgRole !== 'org:admin' && orgId) {
-  // 		const url = req.nextUrl.clone()
-  // 		url.pathname = '/'
-  // 		return NextResponse.redirect(url)
-  // 	}
-  // }
 });
+
 export const config = {
   matcher: [
-    // Skip Next.js internals and all static files, unless found in search params
     "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
-    // Always run for API routes
     "/(api|trpc|blog|edit|drafts)(.*)",
   ],
 };
