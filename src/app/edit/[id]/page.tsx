@@ -1,16 +1,15 @@
 import { EditBlogMetadataForm } from "@/components/editor/EditBlogMetadataForm";
 import SectionEditor from "@/components/editor/SectionEditor";
-import { getBlogSections, getBlogsById } from "@/lib/dal/blogs";
+import { getBlogById, getBlogSections } from "@/lib/dal/blogs";
 
 export default async function EditBlogPage(props: PageProps<"/edit/[id]">) {
   const { id } = await props.params;
 
-  const blogPromise = getBlogsById(id).then((res) => {
+  const blogPromise = getBlogById(id).then((res) => {
     if (res.error || !res.data) return null;
     return res.data;
   });
 
-  
   const sectionsDataPromise = getBlogSections(id).then((res) =>
     res.error == null && res.data ? res.data : [],
   );
