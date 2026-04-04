@@ -1,14 +1,8 @@
 "use client";
 
+import { Globe, Loader2, Save, Trash, Upload } from "lucide-react";
 import { use, useRef, useState, useTransition } from "react";
-import type { Blog } from "@/lib/dal/blogs";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { updateBlogAction, publishBlogAction, deleteBlogAction } from "@/lib/actions/blog-actions";
-import { uploadImageAction } from "@/lib/actions/upload-actions";
-import { compressImage } from "@/lib/compress-image";
 import { toast } from "sonner";
-import { Globe, Save, Loader2, Trash, Upload } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,6 +14,16 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  deleteBlogAction,
+  publishBlogAction,
+  updateBlogAction,
+} from "@/lib/actions/blog-actions";
+import { uploadImageAction } from "@/lib/actions/upload-actions";
+import { compressImage } from "@/lib/compress-image";
+import type { Blog } from "@/lib/dal/blogs";
 
 export function EditBlogMetadataForm({
   blogId,
@@ -60,9 +64,11 @@ export function EditBlogMetadataForm({
           coverUrlRef.current.value = res.url;
         }
         setCoverPreview(res.url);
-        toast.success("Cover image uploaded", { description: "Don't forget to Commit Config to save." });
+        toast.success("Cover image uploaded", {
+          description: "Don't forget to Commit Config to save.",
+        });
       } else {
-        toast.error("Upload failed", { description: res.error });
+        toast.error(("error" in res ? res.error : null) || "Upload failed");
       }
     } catch (err) {
       toast.error("Upload failed", { description: String(err) });
@@ -84,7 +90,7 @@ export function EditBlogMetadataForm({
                 LIVE
               </span>
             )}
-           {!blog.published && (
+            {!blog.published && (
               <span className="text-xs font-bold tracking-widest bg-orange-500/10 text-orange-400 border border-orange-500/30 px-3 py-1 rounded-full whitespace-nowrap">
                 DRAFT
               </span>
@@ -93,15 +99,29 @@ export function EditBlogMetadataForm({
         </div>
         <div className="flex items-center gap-3 w-full md:w-auto">
           <AlertDialog>
-            <AlertDialogTrigger render={<Button type="button" variant="destructive" className="w-full md:w-auto" disabled={isDeleting} />}>
-              {isDeleting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Trash className="w-4 h-4 mr-2" />}
+            <AlertDialogTrigger
+              render={
+                <Button
+                  type="button"
+                  variant="destructive"
+                  className="w-full md:w-auto"
+                  disabled={isDeleting}
+                />
+              }
+            >
+              {isDeleting ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Trash className="w-4 h-4 mr-2" />
+              )}
               Delete
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This action cannot be undone. This will permanently delete this sequence and remove your data from our servers.
+                  This action cannot be undone. This will permanently delete
+                  this sequence and remove your data from our servers.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -112,10 +132,13 @@ export function EditBlogMetadataForm({
                     startDelete(async () => {
                       const res = await deleteBlogAction(blogId);
                       if (res && res.success === false) {
-                        toast.error(("error" in res ? res.error : null) || "Failed to delete");
+                        toast.error(
+                          ("error" in res ? res.error : null) ||
+                            "Failed to delete",
+                        );
                       } else {
                         toast.success("Blog successfully deleted");
-                        window.location.href = '/drafts';
+                        window.location.href = "/drafts";
                       }
                     });
                   }}
@@ -131,7 +154,7 @@ export function EditBlogMetadataForm({
             variant={blog.published ? "secondary" : "default"}
             disabled={isPublishing}
             className={`w-full md:w-auto ${
-               !blog.published && 'shadow-[0_0_20px_rgba(var(--primary),0.3)]'
+              !blog.published && "shadow-[0_0_20px_rgba(var(--primary),0.3)]"
             }`}
             onClick={() => {
               startPublish(async () => {
@@ -175,7 +198,10 @@ export function EditBlogMetadataForm({
           const cover = fd.get("coverUrl") as string;
           const res = await updateBlogAction(blogId, title, cover || null);
           if (res.success) toast.success("Configuration preserved");
-          else if ('error' in res) toast.error(res.error as string || "Failed to save configuration");
+          else if ("error" in res)
+            toast.error(
+              (res.error as string) || "Failed to save configuration",
+            );
         }}
         className="flex flex-col gap-4"
       >
@@ -198,7 +224,7 @@ export function EditBlogMetadataForm({
             <div className="flex gap-2">
               <Input
                 ref={coverUrlRef}
-                key={currentCover || 'empty'}
+                key={currentCover || "empty"}
                 name="coverUrl"
                 defaultValue={currentCover || ""}
                 placeholder="https://..."
@@ -229,7 +255,12 @@ export function EditBlogMetadataForm({
           </div>
         </div>
         <div className="flex justify-end mt-4 pt-4 border-t border-border/40">
-          <Button type="submit" variant="ghost" size="sm" className="hover:bg-primary/10 hover:text-primary transition-colors">
+          <Button
+            type="submit"
+            variant="ghost"
+            size="sm"
+            className="hover:bg-primary/10 hover:text-primary transition-colors"
+          >
             <Save className="w-4 h-4 mr-2" /> Commit Config
           </Button>
         </div>
