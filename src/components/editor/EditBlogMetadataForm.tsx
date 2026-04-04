@@ -207,10 +207,14 @@ export function EditBlogMetadataForm({
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="flex flex-col gap-2">
-            <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+            <label
+              htmlFor="title"
+              className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest"
+            >
               Master Title
             </label>
             <Input
+              id="title"
               key={blog.title}
               name="title"
               defaultValue={blog.title}
@@ -218,11 +222,15 @@ export function EditBlogMetadataForm({
             />
           </div>
           <div className="flex flex-col gap-2">
-            <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+            <label
+              htmlFor="coverUrl"
+              className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest"
+            >
               Cover Topology URI
             </label>
             <div className="flex gap-2">
               <Input
+                id="coverUrl"
                 ref={coverUrlRef}
                 key={currentCover || "empty"}
                 name="coverUrl"
