@@ -18,17 +18,19 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useForm } from "@tanstack/react-form";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import {
   Code,
   GripVertical,
   Heading,
   Image as ImageIcon,
+  Loader2,
   Save,
   Trash2,
   Type,
+  Upload,
 } from "lucide-react";
-import { use } from "react";
+import { use, useRef, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -36,6 +38,8 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { updateSectionsAction } from "@/lib/actions/blog-actions";
+import { uploadImageAction } from "@/lib/actions/upload-actions";
+import { compressImage } from "@/lib/compress-image";
 import type { BlogSection } from "@/lib/dal/blogs";
 
 const sectionSchema = z.object({
@@ -261,15 +265,9 @@ export default function SectionEditor({
                                         }
                                       />
                                     ) : sec.type === "image" ? (
-                                      <Input
-                                        className="bg-background/20 border-border/10 h-10 focus-visible:ring-primary/40"
-                                        placeholder="Image URL Formatter (e.g. /mock_blog_cover_1.png)"
+                                      <ImageUploadField
                                         value={contentField.state.value}
-                                        onChange={(e) =>
-                                          contentField.handleChange(
-                                            e.target.value,
-                                          )
-                                        }
+                                        onChange={(val) => contentField.handleChange(val)}
                                       />
                                     ) : (
                                       <Input
@@ -362,6 +360,78 @@ export default function SectionEditor({
           </Button>
         </div>
       </form>
+  );
+}
+
+function ImageUploadField({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (val: string) => void;
+}) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const compressed = await compressImage(file);
+      const fd = new FormData();
+      fd.append("file", compressed);
+      const res = await uploadImageAction(fd);
+      if (res.success && res.url) {
+        onChange(res.url);
+        toast.success("Image uploaded");
+      } else {
+        toast.error("Upload failed", { description: res.error });
+      }
+    } catch (err) {
+      toast.error("Upload failed", { description: String(err) });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-3 w-full">
+      {value && (
+        <div className="relative w-full aspect-[16/9] rounded-lg overflow-hidden border border-border/20 bg-muted/10">
+          <img src={value} alt="Section visual" className="w-full h-full object-cover" />
+        </div>
+      )}
+      <div className="flex gap-2">
+        <Input
+          className="bg-background/20 border-border/10 h-10 focus-visible:ring-primary/40 flex-1"
+          placeholder="Image URL (or upload below)"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+        />
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleUpload}
+        />
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="h-10 w-10 shrink-0 border-border/20 hover:bg-purple-500/10 hover:text-purple-400 hover:border-purple-400/40 transition-all"
+          disabled={uploading}
+          onClick={() => fileRef.current?.click()}
+        >
+          {uploading ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Upload className="w-4 h-4" />
+          )}
+        </Button>
+      </div>
+    </div>
   );
 }
 

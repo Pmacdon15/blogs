@@ -1,12 +1,14 @@
 "use client";
 
-import { use, useTransition } from "react";
-import { Blog } from "@/lib/dal/blogs";
+import { use, useRef, useState, useTransition } from "react";
+import type { Blog } from "@/lib/dal/blogs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { updateBlogAction, publishBlogAction, deleteBlogAction } from "@/lib/actions/blog-actions";
+import { uploadImageAction } from "@/lib/actions/upload-actions";
+import { compressImage } from "@/lib/compress-image";
 import { toast } from "sonner";
-import { Globe, Save, Loader2, Trash } from "lucide-react";
+import { Globe, Save, Loader2, Trash, Upload } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,6 +31,10 @@ export function EditBlogMetadataForm({
   const blog = use(promise);
   const [isPublishing, startPublish] = useTransition();
   const [isDeleting, startDelete] = useTransition();
+  const [isUploading, setIsUploading] = useState(false);
+  const [coverPreview, setCoverPreview] = useState<string | null>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
+  const coverUrlRef = useRef<HTMLInputElement>(null);
 
   if (!blog) {
     return (
@@ -37,6 +43,35 @@ export function EditBlogMetadataForm({
       </div>
     );
   }
+
+  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const compressed = await compressImage(file);
+      const formData = new FormData();
+      formData.append("file", compressed);
+      const res = await uploadImageAction(formData);
+      if (res.success && res.url) {
+        // Set the URL in the hidden input
+        if (coverUrlRef.current) {
+          coverUrlRef.current.value = res.url;
+        }
+        setCoverPreview(res.url);
+        toast.success("Cover image uploaded", { description: "Don't forget to Commit Config to save." });
+      } else {
+        toast.error("Upload failed", { description: res.error });
+      }
+    } catch (err) {
+      toast.error("Upload failed", { description: String(err) });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const currentCover = coverPreview || blog.cover_image_url;
 
   return (
     <div className="flex flex-col gap-6 p-6 rounded-2xl bg-card border border-border/40 shadow-xl relative z-20">
@@ -119,6 +154,21 @@ export function EditBlogMetadataForm({
         </div>
       </div>
 
+      {/* Cover Image Preview */}
+      {currentCover && (
+        <div className="relative w-full aspect-[3/1] rounded-xl overflow-hidden border border-border/30 bg-muted/20">
+          <img
+            src={currentCover}
+            alt="Cover preview"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+          <span className="absolute bottom-3 left-3 text-[10px] font-mono uppercase tracking-widest text-white/70 bg-black/40 px-2 py-1 rounded-sm backdrop-blur-sm">
+            Cover Preview
+          </span>
+        </div>
+      )}
+
       <form
         action={async (fd) => {
           const title = fd.get("title") as string;
@@ -145,13 +195,37 @@ export function EditBlogMetadataForm({
             <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
               Cover Topology URI
             </label>
-            <Input
-              key={blog.cover_image_url || 'empty'}
-              name="coverUrl"
-              defaultValue={blog.cover_image_url || ""}
-              placeholder="https://..."
-              className="bg-muted/40 border-border/50 font-mono text-sm h-12"
-            />
+            <div className="flex gap-2">
+              <Input
+                ref={coverUrlRef}
+                key={currentCover || 'empty'}
+                name="coverUrl"
+                defaultValue={currentCover || ""}
+                placeholder="https://..."
+                className="bg-muted/40 border-border/50 font-mono text-sm h-12 flex-1"
+              />
+              <input
+                ref={coverInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleCoverUpload}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="h-12 w-12 shrink-0 border-border/50 hover:bg-primary/10 hover:text-primary hover:border-primary/40 transition-all"
+                disabled={isUploading}
+                onClick={() => coverInputRef.current?.click()}
+              >
+                {isUploading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Upload className="w-4 h-4" />
+                )}
+              </Button>
+            </div>
           </div>
         </div>
         <div className="flex justify-end mt-4 pt-4 border-t border-border/40">
