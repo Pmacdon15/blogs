@@ -1,4 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
+import { put } from "@vercel/blob";
 import { errAsync, okAsync } from "neverthrow";
 import {
   createBlogDb,
@@ -235,6 +236,25 @@ export async function deleteBlog(blogId: string) {
     console.error("Unknown Db error: ", e);
     return errAsync({
       reason: "Unknown Db error.",
+    } as const);
+  }
+}
+
+export async function uploadImage(file: File) {
+  const { userId } = await auth();
+  if (!userId) {
+    return errAsync({
+      reason: "Unauthorized: You must be logged in to upload.",
+    } as const);
+  }
+
+  try {
+    const blob = await put(file.name, file, { access: "public" });
+    return okAsync(blob.url);
+  } catch (e) {
+    console.error("Blob upload error: ", e);
+    return errAsync({
+      reason: "Failed to upload image.",
     } as const);
   }
 }
