@@ -1,8 +1,9 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import {
+  type Blog,
   createBlog,
   deleteBlog,
   deleteBlogSection,
@@ -11,6 +12,10 @@ import {
   updateBlogSections,
 } from "../dal/blogs";
 import { UpdateSectionsSchema } from "../types/types";
+
+type UpdateBlogResult =
+  | { success: true; data: Blog }
+  | { success: false; error: string };
 
 export async function createBlogAction(blogId: string) {
   const result = await createBlog(blogId);
@@ -43,31 +48,39 @@ export async function updateBlogAction(
   const result = await updateBlog(blogId, title.trim(), coverImageUrl);
 
   return result.match(
-    () => {
-      revalidatePath(`/blog/${blogId}`);
-      revalidatePath(`/edit/${blogId}`);
-      revalidatePath(`/drafts`);
-      revalidatePath("/");
-      return { success: true };
+    (data): UpdateBlogResult => {
+      updateTag("home-page-blogs");
+      updateTag(`blog-${blogId}-true`);
+      updateTag(`blog-${blogId}-false`);
+      updateTag(`sections-${blogId}-true`);
+      updateTag(`sections-${blogId}-false`);
+      updateTag(`drafts-${data.author_id}`);
+
+      return { success: true, data };
     },
-    (error) => {
+    (error): UpdateBlogResult => {
       return { success: false, error: error.reason };
     },
   );
 }
 
-export async function publishBlogAction(blogId: string) {
+export async function publishBlogAction(
+  blogId: string,
+): Promise<UpdateBlogResult> {
   const result = await publishBlog(blogId);
 
   return result.match(
-    () => {
-      revalidatePath(`/blog/${blogId}`);
-      revalidatePath(`/edit/${blogId}`);
-      revalidatePath(`/drafts`);
-      revalidatePath("/");
-      redirect(`/blog/${blogId}`); // Route out to view published site
+    (data): UpdateBlogResult => {
+      updateTag("home-page-blogs");
+      updateTag(`blog-${blogId}-true`);
+      updateTag(`blog-${blogId}-false`);
+      updateTag(`sections-${blogId}-true`);
+      updateTag(`sections-${blogId}-false`);
+      updateTag(`drafts-${data.author_id}`);
+
+      return { success: true, data };
     },
-    (error) => {
+    (error): UpdateBlogResult => {
       return { success: false, error: error.reason };
     },
   );
@@ -82,26 +95,9 @@ export async function updateSectionsAction(blogId: string, sections: unknown) {
   const result = await updateBlogSections(blogId, parsed.data);
   return result.match(
     () => {
-      revalidatePath(`/blog/${blogId}`);
-      revalidatePath(`/edit/${blogId}`);
+      updateTag(`sections-${blogId}-true`);
+      updateTag(`sections-${blogId}-false`);
       revalidatePath("/");
-      return { success: true };
-    },
-    (error) => {
-      return {
-        success: false,
-        error: error.reason,
-      };
-    },
-  );
-}
-
-export async function deleteSectionAction(blogId: string, sectionId: string) {
-  const result = await deleteBlogSection(sectionId);
-  return result.match(
-    () => {
-      revalidatePath(`/blog/${blogId}`);
-      revalidatePath(`/edit/${blogId}`);
       return { success: true };
     },
     (error) => {
@@ -117,10 +113,15 @@ export async function deleteBlogAction(blogId: string) {
   const result = await deleteBlog(blogId);
 
   return result.match(
-    () => {
-      revalidatePath(`/drafts`);
-      revalidatePath(`/`);
-      return { success: true };
+    (data): UpdateBlogResult => {
+      updateTag("home-page-blogs");
+      updateTag(`blog-${blogId}-true`);
+      updateTag(`blog-${blogId}-false`);
+      updateTag(`sections-${blogId}-true`);
+      updateTag(`sections-${blogId}-false`);
+      updateTag(`drafts-${data.author_id}`);
+
+      return { success: true, data };
     },
     (error) => {
       return { success: false, error: error.reason };

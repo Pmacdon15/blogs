@@ -5,11 +5,30 @@ import CreatedAt from "@/components/blog/created-at";
 import Header from "@/components/blog/header";
 import Sections from "@/components/blog/sections";
 import LinkToEditButton from "@/components/links/link-to-edit-button";
-import { getBlogById, getBlogSections } from "@/lib/dal/blogs";
+import {
+  getBlogByIdPublished,
+  getBlogSectionsPublished,
+} from "@/lib/dal/blogs";
+import { getBlogIds } from "@/lib/db/blog-queries";
 
+export async function generateStaticParams() {
+  const result = await getBlogIds();
+
+  if ("error" in result) {
+    console.error(
+      "GS failed to fetch IDs, falling back to dynamic rendering:",
+      result.error,
+    );
+    return [];
+  }
+
+  return result.map((blog) => ({
+    id: blog.blogId, 
+  }));
+}
 export default function BlogViewPage(props: PageProps<"/blog/[id]">) {
   const blogsPromise = props.params.then((params) =>
-    getBlogById(Array.isArray(params.id) ? params.id[0] : params.id),
+    getBlogByIdPublished(Array.isArray(params.id) ? params.id[0] : params.id),
   );
   const blogIdPromise = blogsPromise.then((blog) =>
     blog.error === null ? blog.data?.id : "",
@@ -30,12 +49,14 @@ export default function BlogViewPage(props: PageProps<"/blog/[id]">) {
   );
 
   const sectionsPromise = props.params.then((params) =>
-    getBlogSections(Array.isArray(params.id) ? params.id[0] : params.id),
+    getBlogSectionsPublished(
+      Array.isArray(params.id) ? params.id[0] : params.id,
+    ),
   );
 
   return (
     <main className="flex min-h-screen flex-col text-foreground bg-background relative overflow-hidden">
-      <div className="absolute top-0 right-0 translate-x-1/3 -translate-y-1/3 w-[50rem] h-[50rem] bg-indigo-500/10 rounded-full blur-[150px] pointer-events-none mix-blend-screen" />
+      <div className="absolute top-0 right-0 translate-x-1/3 -translate-y-1/3 w-200 h-200 bg-indigo-500/10 rounded-full blur-[150px] pointer-events-none mix-blend-screen" />
 
       <article className="max-w-4xl mx-auto w-full px-6 py-16 md:py-24 relative z-10 flex flex-col gap-12">
         {/* Header Segment */}
@@ -60,7 +81,7 @@ export default function BlogViewPage(props: PageProps<"/blog/[id]">) {
 
           <div className="flex items-center gap-4 text-muted-foreground font-medium">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-primary to-blue-600" />
+              <div className="w-8 h-8 rounded-full bg-linear-to-tr from-primary to-blue-600" />
               <Suspense>
                 <Author authorNamePromise={blogAuthorPromise} />
               </Suspense>
