@@ -18,7 +18,6 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useForm } from "@tanstack/react-form";
-import { useMutation } from "@tanstack/react-query";
 import {
   Code,
   GripVertical,
@@ -37,10 +36,10 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { updateSectionsAction } from "@/lib/actions/blog-actions";
 import { uploadImageAction } from "@/lib/actions/upload-actions";
 import { compressImage } from "@/lib/compress-image";
 import type { BlogSection } from "@/lib/dal/blogs";
+import { useUpdateSection } from "@/lib/mutations/blog-mutations";
 
 const _sectionSchema = z.object({
   id: z.string(),
@@ -93,41 +92,27 @@ function SortableItem({
 }
 
 export default function SectionEditor({
-  blogId,
   promise,
+  blogIdPromise,
 }: {
-  blogId: string;
   promise: Promise<BlogSection[]>;
+  blogIdPromise: Promise<string>;
 }) {
   const initialData = use(promise);
+  const blogId = use(blogIdPromise);
 
-  const mutation = useMutation({
-    mutationFn: async (sections: unknown) => {
-      const res = await updateSectionsAction(blogId, sections);
-      if (!res.success) {
-        throw new Error("error" in res ? res.error : "Unknown error");
-      }
-      return res;
-    },
-    onSuccess: () => {
-      toast.success("Sequence saved successfully", {
-        description: "Your abstract draft has been recorded in the datastore.",
-      });
-    },
-    onError: (err) => {
-      toast.error("Failed to orchestrate sequence", {
-        description: err.message,
-      });
-    },
-  });
+  const { mutate, isPending } = useUpdateSection(blogId);
 
   const form = useForm({
     defaultValues: {
-      sections: initialData.map((s, i) => ({ ...s, order_index: i })),
+      sections:
+        initialData.length > 0
+          ? initialData.map((s, i) => ({ ...s, order_index: i }))
+          : [],
     },
 
     onSubmit: async ({ value }) => {
-      mutation.mutate(value.sections);
+      mutate(value.sections);
     },
   });
 
@@ -137,6 +122,14 @@ export default function SectionEditor({
       coordinateGetter: sortableKeyboardCoordinates,
     }),
   );
+
+  if (!blogId) {
+    return (
+      <div className="text-destructive font-mono mb-10">
+        Cannot load blog ID
+      </div>
+    );
+  }
 
   return (
     <form
@@ -360,9 +353,9 @@ export default function SectionEditor({
                 type="submit"
                 size="lg"
                 className="rounded-full h-16 px-10 shadow-2xl shadow-primary/30 bg-primary leading-none tracking-wider font-extrabold gap-3 hover:scale-105 transition-all text-sm group"
-                disabled={mutation.isPending || !canSubmit}
+                disabled={isPending || !canSubmit}
               >
-                {mutation.isPending ? (
+                {isPending ? (
                   <Loader2 className="h-5 w-5 animate-spin" />
                 ) : (
                   <>

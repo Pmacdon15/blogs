@@ -1,7 +1,7 @@
 "use client";
 
 import { Globe, Loader2, Save, Trash, Upload } from "lucide-react";
-import { use, useRef, useState, useTransition } from "react";
+import { use, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -16,29 +16,32 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  deleteBlogAction,
-  publishBlogAction,
-  updateBlogAction,
-} from "@/lib/actions/blog-actions";
 import { uploadImageAction } from "@/lib/actions/upload-actions";
 import { compressImage } from "@/lib/compress-image";
 import type { Blog } from "@/lib/dal/blogs";
+import {
+  useDeleteBlogMutation,
+  usePublishBlogMutation,
+  useUpdateBlogMutation,
+} from "@/lib/mutations/blog-mutations";
 
 export function EditBlogMetadataForm({
-  blogId,
+  blogIdPromise,
   promise,
 }: {
-  blogId: string;
+  blogIdPromise: Promise<string>;
   promise: Promise<Blog | null>;
 }) {
   const blog = use(promise);
-  const [isPublishing, startPublish] = useTransition();
-  const [isDeleting, startDelete] = useTransition();
+  const deleteMutation = useDeleteBlogMutation();
+  const publishMutation = usePublishBlogMutation();
+  const updateMutation = useUpdateBlogMutation();
   const [isUploading, setIsUploading] = useState(false);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
   const coverUrlRef = useRef<HTMLInputElement>(null);
+
+  const blogId = use(blogIdPromise);
 
   if (!blog) {
     return (
@@ -105,11 +108,11 @@ export function EditBlogMetadataForm({
                   type="button"
                   variant="destructive"
                   className="w-full md:w-auto"
-                  disabled={isDeleting}
+                  disabled={deleteMutation.isPending}
                 />
               }
             >
-              {isDeleting ? (
+              {deleteMutation.isPending ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
               ) : (
                 <Trash className="w-4 h-4 mr-2" />
@@ -129,22 +132,11 @@ export function EditBlogMetadataForm({
                 <AlertDialogAction
                   onClick={(e) => {
                     e.preventDefault();
-                    startDelete(async () => {
-                      const res = await deleteBlogAction(blogId);
-                      if (res && res.success === false) {
-                        toast.error(
-                          ("error" in res ? res.error : null) ||
-                            "Failed to delete",
-                        );
-                      } else {
-                        toast.success("Blog successfully deleted");
-                        window.location.href = "/drafts";
-                      }
-                    });
+                    deleteMutation.mutate(blogId);
                   }}
                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                 >
-                  {isDeleting ? "Deleting..." : "Continue"}
+                  {deleteMutation.isPending ? "Deleting..." : "Continue"}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
@@ -152,22 +144,15 @@ export function EditBlogMetadataForm({
           <Button
             type="button"
             variant={blog.published ? "secondary" : "default"}
-            disabled={isPublishing}
+            disabled={publishMutation.isPending}
             className={`w-full md:w-auto ${
               !blog.published && "shadow-[0_0_20px_rgba(var(--primary),0.3)]"
             }`}
             onClick={() => {
-              startPublish(async () => {
-                const res = await publishBlogAction(blogId);
-                if (res.success) {
-                  toast.success("Sequence is now published globally!");
-                } else {
-                  toast.error(res.error || "Failed to publish");
-                }
-              });
+              publishMutation.mutate(blogId);
             }}
           >
-            {isPublishing ? (
+            {publishMutation.isPending ? (
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
             ) : (
               <Globe className="w-4 h-4 mr-2" />
@@ -193,15 +178,16 @@ export function EditBlogMetadataForm({
       )}
 
       <form
-        action={async (fd) => {
-          const title = fd.get("title") as string;
-          const cover = fd.get("coverUrl") as string;
-          const res = await updateBlogAction(blogId, title, cover || null);
-          if (res.success) toast.success("Configuration preserved");
-          else if ("error" in res)
-            toast.error(
-              (res.error as string) || "Failed to save configuration",
-            );
+        onSubmit={(e) => {
+          e.preventDefault();
+          const formData = new FormData(e.currentTarget);
+          const title = formData.get("title") as string;
+          const cover = formData.get("coverUrl") as string;
+          updateMutation.mutate({
+            blogId,
+            title,
+            coverImageUrl: cover || null,
+          });
         }}
         className="flex flex-col gap-4"
       >
@@ -267,9 +253,15 @@ export function EditBlogMetadataForm({
             type="submit"
             variant="ghost"
             size="sm"
+            disabled={updateMutation.isPending}
             className="hover:bg-primary/10 hover:text-primary transition-colors"
           >
-            <Save className="w-4 h-4 mr-2" /> Commit Config
+            {updateMutation.isPending ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Save className="w-4 h-4 mr-2" />
+            )}
+            Commit Config
           </Button>
         </div>
       </form>
