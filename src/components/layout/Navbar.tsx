@@ -1,3 +1,4 @@
+'use client'
 import { Show, SignInButton, UserButton } from "@clerk/nextjs";
 import { TerminalSquare } from "lucide-react";
 import Link from "next/link";

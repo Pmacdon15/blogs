@@ -1,11 +1,24 @@
+"use client";
+import { useQuery } from "@tanstack/react-query";
 import { Library, PenSquare } from "lucide-react";
 import Link from "next/link";
 import { createNewDraftAction } from "@/lib/actions/blog-actions";
-import { isBlogOwner } from "@/lib/auth";
 import { Button } from "../ui/button";
-
-export default async function OwnerLinks() {
-  const isBlogOwnerResults = await isBlogOwner();
+export function useIsBlogOwner() {
+  return useQuery({
+    queryKey: ["blog-owner"],
+    queryFn: async () => {
+      const res = await fetch("/api/blog-owner");
+      if (!res.ok) throw new Error("Failed to fetch owner status");
+      const data = await res.json();
+      return data.isOwner as boolean;
+    },
+    // Prevent excessive re-fetches since ownership rarely changes mid-session
+    staleTime: 1000 * 60 * 5,
+  });
+}
+export default function OwnerLinks() {
+  const isBlogOwnerResults = useIsBlogOwner();
   if (isBlogOwnerResults)
     return (
       <>

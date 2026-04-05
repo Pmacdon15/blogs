@@ -1,4 +1,5 @@
 import { ArrowUpRight } from "lucide-react";
+import type { Route } from "next";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Blog } from "@/lib/dal/blogs";
@@ -11,7 +12,7 @@ export function BlogCard({
   prefix?: string;
 }) {
   return (
-    <Link href={`${prefix}/${blog.id}`} className="group block h-full">
+    <Link href={`${prefix}/${blog.id}` as Route} className="group block h-full">
       <Card className="h-full bg-card/40 backdrop-blur-md border-border/40 hover:bg-card/60 transition-all duration-500 hover:border-primary/40 overflow-hidden flex flex-col group-hover:-translate-y-2 shadow-xl shadow-black/10 hover:shadow-primary/5">
         <div className="aspect-[4/3] w-full overflow-hidden relative bg-muted/30">
           {blog.cover_image_url ? (
