@@ -19,7 +19,7 @@ export default function Home() {
           </h1>
           <p className="text-muted-foreground text-xl md:text-2xl font-light leading-relaxed">
             Welcome to my personal corner of the web. Share, read, and create
-            aesthetic thoughts.
+            thoughts.
           </p>
         </div>
 
