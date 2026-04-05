@@ -26,7 +26,7 @@ export default function BlogViewPage(props: PageProps<"/blog/[id]">) {
   );
 
   const blogAuthorPromise = blogsPromise.then((blog) =>
-    blog.error === null ? blog.data?.author_id : "",
+    blog.error === null ? blog.data?.author_name : "",
   );
 
   const sectionsPromise = props.params.then((params) =>

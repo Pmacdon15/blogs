@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { put } from "@vercel/blob";
 import { errAsync, okAsync } from "neverthrow";
 import {
@@ -17,6 +17,7 @@ import {
 export type Blog = {
   id: string;
   author_id: string;
+  author_name: string;
   title: string;
   cover_image_url: string | null;
   published: boolean;
@@ -44,6 +45,7 @@ export async function getMockBlogs(): Promise<FetchResult<Blog[]>> {
       {
         id: "mock-1",
         author_id: "user_1",
+        author_name: "user_1",
         title: "The Future of AI Design",
         cover_image_url: "/mock_blog_cover_1_1775268530117.png",
         published: true,
@@ -53,6 +55,7 @@ export async function getMockBlogs(): Promise<FetchResult<Blog[]>> {
       {
         id: "mock-2",
         author_id: "user_2",
+        author_name: "user_2",
         title: "Abstract Digital Artistry",
         cover_image_url: "/mock_blog_cover_2_1775268542674.png",
         published: true,
@@ -62,6 +65,7 @@ export async function getMockBlogs(): Promise<FetchResult<Blog[]>> {
       {
         id: "mock-3",
         author_id: "user_1",
+        author_name: "user_1",
         title: "Modern Programming Mindsets",
         cover_image_url: "/mock_blog_cover_3_1775268558086.png",
         published: true,
@@ -119,7 +123,7 @@ export async function getBlogSections(
 }
 
 export async function createBlog(blogId: string) {
-  const { userId } = await auth();
+  const [{ userId }, user] = await Promise.all([auth(), currentUser()]);
   if (!userId) {
     return errAsync({
       reason: "Unauthorized: You must be logged in to draft a blog.",
@@ -127,7 +131,7 @@ export async function createBlog(blogId: string) {
   }
 
   try {
-    const result = await createBlogDb(blogId, userId);
+    const result = await createBlogDb(blogId, userId, user?.fullName || "");
     return okAsync(result);
   } catch (e) {
     console.error("Unknown Db error: ", e);
