@@ -14,16 +14,14 @@ import { getBlogIds } from "@/lib/db/blog-queries";
 export async function generateStaticParams() {
   const result = await getBlogIds();
 
-  if ("error" in result) {
-    console.error(
-      "GS failed to fetch IDs, falling back to dynamic rendering:",
-      result.error,
-    );
-    return [];
+  if ("error" in result || result.length === 0) {
+    // Return a dummy valid UUID to satisfy Next.js "at least one result" requirement 
+    // without triggering DB syntax errors.
+    return [{ id: "00000000-0000-0000-0000-000000000000" }];
   }
 
   return result.map((blog) => ({
-    id: blog.blogId, 
+    id: blog.blogId,
   }));
 }
 export default function BlogViewPage(props: PageProps<"/blog/[id]">) {

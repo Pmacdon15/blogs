@@ -5,6 +5,7 @@ import { sql } from "../db";
 export async function getBlogIds(): Promise<
   { blogId: string }[] | { error: string }
 > {
+  
   try {
     const result = await sql`
       SELECT id FROM blogs WHERE published = true

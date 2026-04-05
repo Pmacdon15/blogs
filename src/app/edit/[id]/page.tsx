@@ -9,23 +9,17 @@ import {
   getBlogSectionsPublished,
 } from "@/lib/dal/blogs";
 import { getBlogIds } from "@/lib/db/blog-queries";
-
 export async function generateStaticParams() {
   const result = await getBlogIds();
 
-  if ("error" in result) {
-    console.error(
-      "GS failed to fetch IDs, falling back to dynamic rendering:",
-      result.error,
-    );
-    return [];
+  if ("error" in result || result.length === 0) {
+    return [{ id: "fallback" }]; 
   }
 
   return result.map((blog) => ({
     id: blog.blogId,
   }));
 }
-
 export default function EditBlogPage(props: PageProps<"/edit/[id]">) {
   const idPromise = props.params.then((params) =>
     Array.isArray(params.id) ? params.id[0] : params.id,
