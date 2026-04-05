@@ -4,6 +4,7 @@ DROP TABLE IF EXISTS blogs CASCADE;
 CREATE TABLE blogs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   author_id VARCHAR(255) NOT NULL,
+  author_name VARCHAR(255) NOT NULL,
   title VARCHAR(255) NOT NULL DEFAULT 'Untitled Blog',
   cover_image_url VARCHAR(1024),
   published BOOLEAN DEFAULT FALSE,

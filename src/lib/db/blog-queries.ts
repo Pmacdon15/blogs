@@ -22,8 +22,9 @@ export async function getBlogByIdDb(id: string): Promise<Blog | null> {
 export async function createBlogDb(
   id: string,
   authorId: string,
+  authorName: string
 ): Promise<boolean> {
-  await sql`INSERT INTO blogs (id, author_id, title) VALUES (${id}, ${authorId}, 'Untitled Draft');`;
+  await sql`INSERT INTO blogs (id, author_id, author_name, title) VALUES (${id}, ${authorId}, ${authorName}, 'Untitled Draft');`;
   return true;
 }
 
