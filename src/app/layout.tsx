@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
-import Navbar from "@/components/layout/Navbar";
+import { Analytics } from "@vercel/analytics/next";
 import Footer from "@/components/layout/Footer";
+import Navbar from "@/components/layout/Navbar";
 import Providers from "@/components/providers/query-provider";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -37,11 +38,10 @@ export default function RootLayout({
           <Providers>
             <div className="flex flex-col min-h-full">
               <Navbar />
-              <main className="flex-grow">
-                {children}
-              </main>
+              <main className="flex-grow">{children}</main>
               <Footer />
             </div>
+            <Analytics />
             <Toaster theme="dark" />
           </Providers>
         </ClerkProvider>
