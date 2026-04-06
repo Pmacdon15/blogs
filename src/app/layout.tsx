@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import Navbar from "@/components/layout/Navbar";
+import Footer from "@/components/layout/Footer";
 import Providers from "@/components/providers/query-provider";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -31,11 +32,16 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
     >
-      <body className="min-h-full flex flex-col bg-background text-foreground">
+      <body className="h-full bg-background text-foreground">
         <ClerkProvider>
           <Providers>
-            <Navbar />
-            {children}
+            <div className="flex flex-col min-h-full">
+              <Navbar />
+              <main className="flex-grow">
+                {children}
+              </main>
+              <Footer />
+            </div>
             <Toaster theme="dark" />
           </Providers>
         </ClerkProvider>
