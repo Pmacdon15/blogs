@@ -5,7 +5,6 @@ import { sql } from "../db";
 export async function getBlogIds(): Promise<
   { blogId: string }[] | { error: string }
 > {
-  
   try {
     const result = await sql`
       SELECT id FROM blogs WHERE published = true
@@ -39,7 +38,7 @@ export async function getBlogByIdDb(
   published = true,
 ): Promise<Blog | null> {
   "use cache";
-  cacheTag(`blog-${id}-${published}`);
+  cacheTag(`blog-${id}-${published ? "true" : "false"}`);
   cacheLife("weeks");
   const res = await sql`
     SELECT * FROM blogs 
@@ -90,7 +89,7 @@ export async function getBlogSectionsDb(
   published = true,
 ): Promise<BlogSection[]> {
   "use cache";
-  cacheTag(`sections-${blogId}-${published}`);
+  cacheTag(`sections-${blogId}-${published ? "true" : "false"}`);
   cacheLife("weeks");
   const res = await sql`
     SELECT bs.* FROM blog_sections bs
