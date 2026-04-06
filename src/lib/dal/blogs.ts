@@ -92,9 +92,11 @@ export async function getBlogs(): Promise<FetchResult<Blog[]>> {
 }
 
 export async function getDrafts(): Promise<FetchResult<Blog[]>> {
+  const isOwnerResult = await isBlogOwner();
   const { userId } = await auth();
-  if (!userId)
-    return { data: null, error: `"Unauthorized: You must be logged in.` };
+
+  if (!userId || !isOwnerResult)
+    return { data: null, error: `"Unauthorized or unauthenticated.` };
 
   try {
     const data = await getDraftsDb(userId);
