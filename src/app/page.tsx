@@ -15,7 +15,7 @@ export default function Home() {
       <div className="flex-1 w-full max-w-6xl mx-auto px-6 py-20 lg:py-32 flex flex-col gap-14 relative z-10">
         <div className="flex flex-col gap-6 text-center md:text-left max-w-3xl">
           <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter bg-gradient-to-br from-white via-white/90 to-white/30 bg-clip-text text-transparent drop-shadow-sm">
-            Pat's Blogs
+            {process.env.BLOG_OWNER_NAME}'s Blogs
           </h1>
           <p className="text-muted-foreground text-xl md:text-2xl font-light leading-relaxed">
             Welcome to my personal corner of the web. Share, read, and create

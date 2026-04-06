@@ -13,7 +13,7 @@ export default function Navbar() {
           <Link href="/" className="flex items-center gap-2 group">
             <TerminalSquare className="h-6 w-6 text-primary group-hover:text-white transition-colors" />
             <span className="font-bold tracking-wider text-lg hidden md:inline-block">
-              Pat's Blogs
+              {process.env.BLOG_OWNER_NAME}'s Blogs
             </span>
           </Link>
         </div>
